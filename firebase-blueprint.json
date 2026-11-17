@@ -1,0 +1,542 @@
+{
+  "entities": {
+    "SubscriptionPlan": {
+      "title": "SubscriptionPlan",
+      "description": "Configurable multi-school SaaS subscription tier managed by Super Admin.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "monthlyPriceGhs": { "type": "number" },
+        "annualDiscountPercent": { "type": "integer" },
+        "pupilLimit": { "type": "integer" },
+        "trialDays": { "type": "integer" },
+        "features": { "type": "array" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "monthlyPriceGhs", "annualDiscountPercent", "pupilLimit", "trialDays", "isActive", "createdAt", "updatedAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated SafeTrack user profile and active school/role preferences.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "phone": { "type": "string" },
+        "activeSchoolId": { "type": "string" },
+        "activeRole": { "type": "string", "enum": ["parent", "teacher", "school_admin", "super_admin", "pickup_person"] },
+        "locationConsentGranted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "displayName", "activeSchoolId", "activeRole", "locationConsentGranted", "createdAt", "updatedAt"]
+    },
+    "MembershipIndex": {
+      "title": "MembershipIndex",
+      "description": "Per-user index of schools the user belongs to.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "role": { "type": "string", "enum": ["school_admin", "teacher", "parent", "pickup_person"] },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "schoolName", "role", "status", "createdAt", "updatedAt"]
+    },
+    "School": {
+      "title": "School",
+      "description": "Independent tenant school registered on SafeTrack.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "country": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "motto": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "currentTerm": { "type": "string" },
+        "operatingHours": { "type": "string" },
+        "ownerUserId": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "planId": { "type": "string" },
+        "planName": { "type": "string" },
+        "monthlyPriceGhs": { "type": "number" },
+        "annualDiscountPercent": { "type": "integer" },
+        "pupilLimit": { "type": "integer" },
+        "billingCycle": { "type": "string", "enum": ["monthly", "annual"] },
+        "subscriptionStatus": { "type": "string", "enum": ["trial", "active", "past_due", "suspended"] },
+        "paymentProvider": { "type": "string", "enum": ["paystack", "hubtel", "pending"] },
+        "paymentReference": { "type": "string" },
+        "logoUri": { "type": "string" },
+        "geofenceLatitude": { "type": "number" },
+        "geofenceLongitude": { "type": "number" },
+        "geofenceRadiusMeters": { "type": "number" },
+        "geofenceEnabled": { "type": "boolean" },
+        "studentCount": { "type": "integer" },
+        "trialDays": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "code", "city", "country", "ownerUserId", "adminUids", "planId", "planName", "monthlyPriceGhs", "pupilLimit", "billingCycle", "subscriptionStatus", "studentCount", "createdAt", "updatedAt"]
+    },
+    "SchoolMember": {
+      "title": "SchoolMember",
+      "description": "Authoritative role membership within a specific school.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["school_admin", "teacher", "parent", "pickup_person"] },
+        "assignedClassIds": { "type": "array" },
+        "assignedSubjectIds": { "type": "array" },
+        "assignedSubjectNames": { "type": "array" },
+        "linkedStudentIds": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "inviteCode": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "userId", "email", "displayName", "role", "assignedClassIds", "linkedStudentIds", "adminUids", "status", "createdAt", "updatedAt"]
+    },
+    "SchoolInvite": {
+      "title": "SchoolInvite",
+      "description": "Invitation code or email invite for onboarding teachers, parents, or pickup persons into a school.",
+      "type": "object",
+      "properties": {
+        "inviteCode": { "type": "string" },
+        "schoolId": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "targetEmail": { "type": "string" },
+        "role": { "type": "string", "enum": ["school_admin", "teacher", "parent", "pickup_person"] },
+        "assignedClassIds": { "type": "array" },
+        "linkedStudentIds": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "status": { "type": "string", "enum": ["pending", "claimed", "revoked"] },
+        "claimedByUid": { "type": "string" },
+        "createdByUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["inviteCode", "schoolId", "schoolName", "targetEmail", "role", "assignedClassIds", "linkedStudentIds", "adminUids", "status", "createdByUid", "createdAt", "updatedAt"]
+    },
+    "SchoolClass": {
+      "title": "SchoolClass",
+      "description": "Class/form room within a school with assigned teachers.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "name": { "type": "string" },
+        "gradeLevel": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "teacherUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "studentCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "name", "gradeLevel", "academicYear", "teacherUids", "adminUids", "studentCount", "createdAt", "updatedAt"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Pupil profile with guardians, teachers, authorised pickup persons, approved destinations, and restricted emergency/medical notes.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "admissionNumber": { "type": "string" },
+        "fullName": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "transferred", "promoted", "graduated", "archived"] },
+        "photoUri": { "type": "string" },
+        "emergencyContactName": { "type": "string" },
+        "emergencyContactPhone": { "type": "string" },
+        "medicalNotes": { "type": "string" },
+        "approvedDestinations": { "type": "array" },
+        "authorisedPickups": { "type": "array" },
+        "guardianUids": { "type": "array" },
+        "teacherUids": { "type": "array" },
+        "pickupUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "admissionNumber", "fullName", "classId", "className", "academicYear", "status", "approvedDestinations", "authorisedPickups", "guardianUids", "teacherUids", "pickupUids", "adminUids", "createdAt", "updatedAt"]
+    },
+    "Journey": {
+      "title": "Journey",
+      "description": "Authorised child movement record between home, school, and approved alternative destinations.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "direction": { "type": "string", "enum": ["morning_to_school", "afternoon_to_home", "alternative_destination"] },
+        "status": { "type": "string", "enum": ["preparing_for_school", "on_the_way_to_school", "arrived_at_school", "on_the_way_home", "arrived_home", "at_approved_alternative_destination", "journey_delayed", "emergency_reported"] },
+        "destinationName": { "type": "string" },
+        "destinationType": { "type": "string" },
+        "initiatedByUid": { "type": "string" },
+        "initiatedByRole": { "type": "string" },
+        "initiatedByName": { "type": "string" },
+        "confirmedByUid": { "type": "string" },
+        "confirmedByName": { "type": "string" },
+        "gpsAvailable": { "type": "boolean" },
+        "consentGranted": { "type": "boolean" },
+        "liveLatitude": { "type": "number" },
+        "liveLongitude": { "type": "number" },
+        "lastKnownLatitude": { "type": "number" },
+        "lastKnownLongitude": { "type": "number" },
+        "isTrackingActive": { "type": "boolean" },
+        "manualNote": { "type": "string" },
+        "guardianUids": { "type": "array" },
+        "teacherUids": { "type": "array" },
+        "pickupUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "studentId", "studentName", "classId", "className", "direction", "status", "destinationName", "destinationType", "initiatedByUid", "initiatedByRole", "initiatedByName", "gpsAvailable", "consentGranted", "isTrackingActive", "guardianUids", "teacherUids", "pickupUids", "adminUids", "createdAt", "updatedAt"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Confirmed class attendance record separate from journey start.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "dateKey": { "type": "string" },
+        "term": { "type": "string" },
+        "status": { "type": "string", "enum": ["present", "absent", "late", "excused_absence", "early_departure", "pending_confirmation"] },
+        "arrivalTime": { "type": "string" },
+        "recordedByUid": { "type": "string" },
+        "recordedByName": { "type": "string" },
+        "correctionReason": { "type": "string" },
+        "isOfflineSynced": { "type": "boolean" },
+        "guardianUids": { "type": "array" },
+        "teacherUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "studentId", "studentName", "classId", "className", "dateKey", "term", "status", "recordedByUid", "recordedByName", "correctionReason", "isOfflineSynced", "guardianUids", "teacherUids", "adminUids", "createdAt", "updatedAt"]
+    },
+    "Incident": {
+      "title": "Incident",
+      "description": "Emergency or safety incident report with restricted access.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "journeyId": { "type": "string" },
+        "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "status": { "type": "string", "enum": ["open", "investigating", "resolved"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "reportedByUid": { "type": "string" },
+        "reportedByName": { "type": "string" },
+        "reportedByRole": { "type": "string" },
+        "guardianUids": { "type": "array" },
+        "teacherUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "studentId", "studentName", "severity", "status", "title", "description", "reportedByUid", "reportedByName", "reportedByRole", "guardianUids", "teacherUids", "adminUids", "createdAt", "updatedAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Secure parent-teacher-school communication thread message.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "senderUid": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderRole": { "type": "string" },
+        "body": { "type": "string" },
+        "guardianUids": { "type": "array" },
+        "teacherUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "studentId", "studentName", "senderUid", "senderName", "senderRole", "body", "guardianUids", "teacherUids", "adminUids", "createdAt"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "In-app notification record for journey, attendance, or emergency alerts.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "recipientUid": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "type": { "type": "string" },
+        "studentId": { "type": "string" },
+        "journeyId": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "recipientUid", "title", "body", "type", "isRead", "adminUids", "createdAt", "updatedAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Append-only immutable audit log for attendance changes, dismissals, location consent, and admin actions.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "actorUid": { "type": "string" },
+        "actorName": { "type": "string" },
+        "actorRole": { "type": "string" },
+        "action": { "type": "string" },
+        "targetType": { "type": "string" },
+        "targetId": { "type": "string" },
+        "details": { "type": "string" },
+        "reason": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "actorUid", "actorName", "actorRole", "action", "targetType", "targetId", "details", "adminUids", "createdAt"]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "Academic subject configured by a school for exam scoring and 4-core aggregate calculation.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "level": { "type": "string", "enum": ["primary", "jhs", "both"] },
+        "isCore": { "type": "boolean" },
+        "coreSlot": { "type": "string" },
+        "teacherUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "name", "code", "level", "isCore", "coreSlot", "teacherUids", "adminUids", "createdAt", "updatedAt"]
+    },
+    "ExamReport": {
+      "title": "ExamReport",
+      "description": "Terminal examination report card with 50/50 class+exam scores, Ghana grades (1-6), 4-core aggregate, position, remarks, and signatures.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "schoolLogoUri": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "admissionNumber": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "term": { "type": "string" },
+        "level": { "type": "string", "enum": ["primary", "jhs"] },
+        "scores": { "type": "array" },
+        "overallTotal": { "type": "number" },
+        "averageScore": { "type": "number" },
+        "positionText": { "type": "string" },
+        "aggregate": { "type": "integer" },
+        "aggregateBreakdown": { "type": "string" },
+        "attendanceSummary": { "type": "string" },
+        "attitudeAndConduct": { "type": "string" },
+        "teacherRemarks": { "type": "string" },
+        "headTeacherRemarks": { "type": "string" },
+        "classTeacherSignature": { "type": "string" },
+        "headTeacherSignature": { "type": "string" },
+        "recordedByUid": { "type": "string" },
+        "recordedByName": { "type": "string" },
+        "guardianUids": { "type": "array" },
+        "teacherUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "schoolName", "studentId", "studentName", "admissionNumber", "classId", "className", "academicYear", "term", "level", "scores", "overallTotal", "averageScore", "positionText", "aggregate", "aggregateBreakdown", "attendanceSummary", "attitudeAndConduct", "teacherRemarks", "headTeacherRemarks", "classTeacherSignature", "headTeacherSignature", "recordedByUid", "recordedByName", "guardianUids", "teacherUids", "adminUids", "createdAt", "updatedAt"]
+    },
+    "AppDistributionConfig": {
+      "title": "AppDistributionConfig",
+      "description": "App view access mode, supported device targets, and public download/share URL configuration.",
+      "type": "object",
+      "properties": {
+        "configId": { "type": "string" },
+        "downloadUrl": { "type": "string" },
+        "playStoreUrl": { "type": "string" },
+        "appStoreUrl": { "type": "string" },
+        "apkDownloadUrl": { "type": "string" },
+        "viewAccessMode": { "type": "string", "enum": ["public_open", "invite_only", "staff_and_parents"] },
+        "allowedDeviceTypes": { "type": "array" },
+        "releaseNotes": { "type": "string" },
+        "updatedByUid": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["configId", "downloadUrl", "viewAccessMode", "allowedDeviceTypes", "releaseNotes", "updatedByUid", "updatedAt"]
+    },
+    "UserDeviceSession": {
+      "title": "UserDeviceSession",
+      "description": "Registered signed-in device session for account security management.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "deviceName": { "type": "string" },
+        "platform": { "type": "string" },
+        "appVersion": { "type": "string" },
+        "lastActiveLabel": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "deviceName", "platform", "appVersion", "lastActiveLabel", "createdAt", "updatedAt"]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "School inventory stock & asset register entry.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "quantity": { "type": "integer" },
+        "minimumStock": { "type": "integer" },
+        "condition": { "type": "string", "enum": ["new", "good", "fair", "needs_repair", "retired"] },
+        "assignedTo": { "type": "string" },
+        "notes": { "type": "string" },
+        "teacherUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "updatedByUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "name", "category", "quantity", "minimumStock", "condition", "assignedTo", "notes", "teacherUids", "adminUids", "updatedByUid", "createdAt", "updatedAt"]
+    },
+    "FeeRecord": {
+      "title": "FeeRecord",
+      "description": "Pupil school fee invoice and payment ledger record.",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "className": { "type": "string" },
+        "title": { "type": "string" },
+        "term": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "amountDueGhs": { "type": "number" },
+        "amountPaidGhs": { "type": "number" },
+        "status": { "type": "string", "enum": ["unpaid", "partial", "paid", "waived"] },
+        "paymentMethod": { "type": "string", "enum": ["mobile_money", "bank_transfer", "cash", "card", "waiver"] },
+        "receiptNumber": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "guardianUids": { "type": "array" },
+        "adminUids": { "type": "array" },
+        "recordedByUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolId", "studentId", "studentName", "className", "title", "term", "academicYear", "amountDueGhs", "amountPaidGhs", "status", "paymentMethod", "receiptNumber", "dueDate", "guardianUids", "adminUids", "recordedByUid", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/subscription_plans/{planId}": {
+      "schema": { "$ref": "#/entities/SubscriptionPlan" },
+      "description": "Platform-wide configurable SaaS plans (Starter, Professional, Enterprise)."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile and active workspace selection."
+    },
+    "/users/{userId}/memberships/{schoolId}": {
+      "schema": { "$ref": "#/entities/MembershipIndex" },
+      "description": "Per-user list of school memberships."
+    },
+    "/schools/{schoolId}": {
+      "schema": { "$ref": "#/entities/School" },
+      "description": "Multi-school tenant records and subscription state."
+    },
+    "/schools/{schoolId}/members/{memberUid}": {
+      "schema": { "$ref": "#/entities/SchoolMember" },
+      "description": "Authoritative school member roles and class/student assignments."
+    },
+    "/school_invites/{inviteCode}": {
+      "schema": { "$ref": "#/entities/SchoolInvite" },
+      "description": "Invite codes and email invites to join a specific school."
+    },
+    "/classes/{classId}": {
+      "schema": { "$ref": "#/entities/SchoolClass" },
+      "description": "School classes with assigned teachers."
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Pupil profiles scoped to a single school."
+    },
+    "/journeys/{journeyId}": {
+      "schema": { "$ref": "#/entities/Journey" },
+      "description": "Authorised morning, afternoon, and alternative destination journeys."
+    },
+    "/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/AttendanceRecord" },
+      "description": "Confirmed student attendance records with audit correction reasons."
+    },
+    "/incidents/{incidentId}": {
+      "schema": { "$ref": "#/entities/Incident" },
+      "description": "Emergency and safety incident reports."
+    },
+    "/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Parent-teacher-school secure communication logs."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "In-app notification inbox."
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Immutable compliance and security audit trail."
+    },
+    "/subjects/{subjectId}": {
+      "schema": { "$ref": "#/entities/Subject" },
+      "description": "Subjects per school for terminal exams and aggregate calculation."
+    },
+    "/exam_reports/{reportId}": {
+      "schema": { "$ref": "#/entities/ExamReport" },
+      "description": "Student terminal report cards viewable by teachers, school admins, and guardians."
+    },
+    "/app_distribution/{configId}": {
+      "schema": { "$ref": "#/entities/AppDistributionConfig" },
+      "description": "Public download URL, device compatibility flags, and view access mode per school or globally."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/UserDeviceSession" },
+      "description": "Signed-in device session history per user."
+    },
+    "/inventory_items/{itemId}": {
+      "schema": { "$ref": "#/entities/InventoryItem" },
+      "description": "School inventory stock & asset records scoped by schoolId."
+    },
+    "/fee_records/{feeId}": {
+      "schema": { "$ref": "#/entities/FeeRecord" },
+      "description": "School fees & payment ledger records readable by admins and linked guardians."
+    }
+  }
+}
