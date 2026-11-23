@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Public
@@ -128,6 +131,44 @@ fun openAppDownloadUrl(context: Context, url: String) {
         context.startActivity(intent)
     }.onFailure {
         Toast.makeText(context, "Could not open URL in browser", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun shareInstalledApkFile(context: Context, schoolName: String = "SafeTrack") {
+    val result = runCatching {
+        val sourceApkPath = context.applicationInfo?.sourceDir
+            ?.takeIf { it.isNotBlank() }
+            ?: error("APK path unavailable")
+        val sourceFile = File(sourceApkPath)
+        require(sourceFile.exists() && sourceFile.canRead()) {
+            "Installed APK cannot be read on this device."
+        }
+        val exportDir = File(context.cacheDir, "reports").apply { mkdirs() }
+        val targetApk = File(exportDir, "SafeTrack_Installer.apk")
+        sourceFile.inputStream().use { input ->
+            targetApk.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", targetApk)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/vnd.android.package-archive"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, "$schoolName Android Installer (SafeTrack.apk)")
+            putExtra(
+                Intent.EXTRA_TEXT,
+                "Install $schoolName without Google Play Store: open SafeTrack_Installer.apk on Android and allow installs from your file manager/browser if asked."
+            )
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Send SafeTrack APK (No Play Store Required)"))
+    }
+    result.onFailure {
+        Toast.makeText(
+            context,
+            "APK sharing is available on installed Android builds; use an HTTPS APK link or AI Studio APK export for web hosting.",
+            Toast.LENGTH_LONG
+        ).show()
     }
 }
 
@@ -285,6 +326,14 @@ fun AppShareDownloadCard(
                     Text("QR Code")
                 }
                 OutlinedButton(
+                    onClick = { shareInstalledApkFile(context) },
+                    modifier = Modifier.testTag("card_share_apk_file_button")
+                ) {
+                    Icon(Icons.Filled.FilePresent, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.size(4.dp))
+                    Text("Share APK File")
+                }
+                OutlinedButton(
                     onClick = onOpenFullDialog,
                     modifier = Modifier.testTag("card_configure_view_access_button")
                 ) {
@@ -339,8 +388,17 @@ fun AppViewAndDownloadDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    var editableUrl by remember(config.downloadUrl) {
-        mutableStateOf(config.downloadUrl.trim())
+    val initialResolvedUrl = remember(config.downloadUrl, config.playStoreUrl, config.appStoreUrl, config.apkDownloadUrl) {
+        val preferred = AppLinkValidator.resolvePreferredDownloadUrl(
+            primaryUrl = config.downloadUrl,
+            playStoreUrl = config.playStoreUrl,
+            appStoreUrl = config.appStoreUrl,
+            apkDownloadUrl = config.apkDownloadUrl
+        )
+        preferred.normalizedUrl.ifBlank { config.downloadUrl.trim() }
+    }
+    var editableUrl by remember(initialResolvedUrl) {
+        mutableStateOf(initialResolvedUrl)
     }
     var selectedAccessMode by remember(config.viewAccessMode) {
         mutableStateOf(AppViewAccessMode.fromKey(config.viewAccessMode))
@@ -424,12 +482,12 @@ fun AppViewAndDownloadDialog(
                 HorizontalDivider()
 
                 Text(
-                    text = "Canonical HTTPS Download URL",
+                    text = "Direct Internet Download URL (No Play Store Needed)",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Use your official Google Play Store link, Firebase App Distribution release URL, or a verified HTTPS hosting page. Temporary preview URLs (*.run.app) are rejected.",
+                    text = "Paste a direct HTTPS APK URL (e.g., Firebase Hosting, GitHub Releases, or your school domain), a Firebase App Distribution link, or a Play Store URL. Temporary preview URLs (*.run.app) are rejected.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -438,12 +496,12 @@ fun AppViewAndDownloadDialog(
                     onValueChange = { if (canEditAccessSettings) editableUrl = it },
                     readOnly = !canEditAccessSettings,
                     label = { Text("Verified HTTPS Download URL") },
-                    placeholder = { Text("https://play.google.com/store/apps/details?id=com.aistudio.safetrack.xkqvmz") },
+                    placeholder = { Text("https://downloads.yourschool.org/SafeTrack.apk") },
                     isError = !isUrlValid,
                     supportingText = {
                         Text(
                             text = if (isUrlValid) {
-                                "Detected destination: ${baseCheck.destinationType.label}"
+                                AppLinkValidator.installMethodHint(baseCheck)
                             } else {
                                 baseCheck.errorMessage ?: "Enter a valid HTTPS URL."
                             }
@@ -546,6 +604,14 @@ fun AppViewAndDownloadDialog(
                         Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.size(4.dp))
                         Text("Open")
+                    }
+                    OutlinedButton(
+                        onClick = { shareInstalledApkFile(context) },
+                        modifier = Modifier.testTag("dialog_share_apk_file_button")
+                    ) {
+                        Icon(Icons.Filled.FilePresent, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.size(4.dp))
+                        Text("Share APK File")
                     }
                 }
 

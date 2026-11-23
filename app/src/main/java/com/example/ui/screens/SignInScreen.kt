@@ -68,6 +68,7 @@ import com.example.ui.theme.SafeGreen700
 @Composable
 fun SignInScreen(
     onAuthSuccess: () -> Unit,
+    appDistributionConfig: AppDistributionConfig = AppDistributionConfig(),
     deviceViewLayoutMode: DeviceViewLayoutMode = DeviceViewLayoutMode.AUTO,
     onSelectDeviceLayoutMode: (DeviceViewLayoutMode) -> Unit = {},
     onOpenGuide: () -> Unit = {},
@@ -276,7 +277,7 @@ fun SignInScreen(
 
     if (showShareDialog) {
         AppViewAndDownloadDialog(
-            config = AppDistributionConfig(),
+            config = appDistributionConfig,
             currentDeviceLayoutMode = deviceViewLayoutMode,
             canEditAccessSettings = false,
             isBusy = false,

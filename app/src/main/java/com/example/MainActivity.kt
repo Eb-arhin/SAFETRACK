@@ -83,6 +83,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -103,6 +104,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.data.local.AppSettingsState
 import com.example.data.local.AppSettingsStore
 import com.example.data.local.SafeTrackDatabase
+import com.example.data.model.AppDistributionConfig
 import com.example.data.model.DeviceViewLayoutMode
 import com.example.data.model.UiState
 import com.example.data.model.UserRole
@@ -112,6 +114,7 @@ import com.example.ui.auth.authStateFlow
 import com.example.ui.auth.signOut
 import com.example.ui.components.AppViewAndDownloadDialog
 import com.example.ui.components.OnboardingSlidesModal
+import kotlinx.coroutines.flow.catch
 import com.example.ui.screens.AcademicsScreen
 import com.example.ui.screens.ClassesPupilsScreen
 import com.example.ui.screens.DailyAttendanceScreen
@@ -238,6 +241,13 @@ fun SafeTrackAppRoot(
 
     val user = currentUser
     if (user == null) {
+        val publicDistConfig by produceState(initialValue = AppDistributionConfig(), context) {
+            val db = FirebaseFirestore.getInstance(context.getString(R.string.firestore_database_id))
+            SafeTrackRepository(db, null)
+                .observeAppDistributionConfig("global")
+                .catch { emit(AppDistributionConfig()) }
+                .collect { value = it }
+        }
         val frameWidth = when (preAuthLayoutMode) {
             DeviceViewLayoutMode.PHONE -> 420.dp
             DeviceViewLayoutMode.TABLET -> 860.dp
@@ -246,6 +256,7 @@ fun SafeTrackAppRoot(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             SignInScreen(
                 onAuthSuccess = {},
+                appDistributionConfig = publicDistConfig,
                 deviceViewLayoutMode = preAuthLayoutMode,
                 onSelectDeviceLayoutMode = { mode ->
                     preAuthLayoutMode = mode

@@ -166,4 +166,30 @@ object AppLinkValidator {
         val encoded = URLEncoder.encode(text, StandardCharsets.UTF_8.name())
         return "https://wa.me/?text=$encoded"
     }
+
+    fun isDirectApkOrReleaseUrl(url: String): Boolean {
+        val lower = url.trim().lowercase()
+        if (!lower.startsWith("https://")) return false
+        return lower.contains(".apk") ||
+            lower.contains("github.com/") && lower.contains("/releases") ||
+            lower.contains("firebasestorage.googleapis.com") ||
+            lower.contains("appdistribution.firebase.")
+    }
+
+    fun installMethodHint(result: UrlValidationResult): String = when (result.destinationType) {
+        DownloadDestinationType.GOOGLE_PLAY ->
+            "Opens Google Play Store on Android phones, tablets, and Chromebooks."
+        DownloadDestinationType.FIREBASE_APP_DISTRIBUTION ->
+            "No Google Play Store needed: recipients open this Firebase link in their browser, sign in, and install directly."
+        DownloadDestinationType.HTTPS_WEB_HOST ->
+            if (isDirectApkOrReleaseUrl(result.normalizedUrl)) {
+                "Direct APK install (No Play Store required): download the APK, allow browser installs if prompted, and tap Install."
+            } else {
+                "Hosted HTTPS web page (No Play Store required): opens on phones, tablets, and computers to download or launch SafeTrack."
+            }
+        DownloadDestinationType.UNCONFIGURED ->
+            "You can distribute without Google Play Store using Firebase App Distribution, a GitHub Releases / school HTTPS link to SafeTrack.apk, or the Share APK File button on an installed device."
+        DownloadDestinationType.INVALID ->
+            result.errorMessage ?: "Enter a valid public https:// URL."
+    }
 }

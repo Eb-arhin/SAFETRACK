@@ -240,4 +240,20 @@ class ExampleUnitTest {
         assertTrue(waUri.startsWith("https://wa.me/?text="))
         assertTrue(waUri.contains("CFX-2026"))
     }
+
+    @Test
+    fun appLinkValidator_identifiesPlayStoreFreeApkAndFirebaseDistributionUrls() {
+        assertTrue(AppLinkValidator.isDirectApkOrReleaseUrl("https://downloads.cefelix.edu.gh/SafeTrack.apk"))
+        assertTrue(AppLinkValidator.isDirectApkOrReleaseUrl("https://github.com/cefelix/safetrack/releases/download/v1/SafeTrack.apk"))
+        assertTrue(AppLinkValidator.isDirectApkOrReleaseUrl("https://appdistribution.firebase.google.com/pub/i/abc123"))
+        assertFalse(AppLinkValidator.isDirectApkOrReleaseUrl("https://play.google.com/store/apps/details?id=com.aistudio.safetrack.xkqvmz"))
+
+        val apkRes = AppLinkValidator.validatePublicDownloadUrl("https://downloads.cefelix.edu.gh/SafeTrack.apk")
+        assertTrue(apkRes.isValid)
+        assertTrue(AppLinkValidator.installMethodHint(apkRes).contains("No Play Store required"))
+
+        val fbdRes = AppLinkValidator.validatePublicDownloadUrl("https://appdistribution.firebase.google.com/pub/i/abc123")
+        assertTrue(fbdRes.isValid)
+        assertTrue(AppLinkValidator.installMethodHint(fbdRes).contains("No Google Play Store needed"))
+    }
 }

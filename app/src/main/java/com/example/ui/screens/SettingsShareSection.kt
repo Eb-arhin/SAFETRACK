@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
@@ -45,6 +46,7 @@ import com.example.ui.components.copyAppUrlToClipboard
 import com.example.ui.components.openAppDownloadUrl
 import com.example.ui.components.shareAppDownloadUrl
 import com.example.ui.components.shareAppViaWhatsApp
+import com.example.ui.components.shareInstalledApkFile
 import com.example.ui.theme.EmergencyRed100
 import com.example.ui.theme.EmergencyRed700
 import com.example.ui.theme.SafeBlue100
@@ -106,21 +108,50 @@ fun SettingsShareAppSection(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Filled.Share, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Column {
-                    Text("Share App & Cross-Platform Distribution", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("Share App & Play-Free Distribution", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text(
-                        "Distribute verified Google Play, App Store, or HTTPS APK links across Phone, Tablet & Desktop.",
+                        "Distribute directly over the internet without Google Play Store (Direct APK URL, Firebase App Distribution, Web Portal, or APK File Share) across Phone, Tablet & Desktop.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = SafeBlue100.copy(alpha = 0.45f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "How to Share Without Google Play Store",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = SafeBlue700
+                    )
+                    Text(
+                        text = "1. Export your SafeTrack APK and upload it to Firebase App Distribution, GitHub Releases, or an HTTPS site (hosting/index.html is included in this project).\n2. Paste that https:// link below and save to generate a public link & QR code.\n3. Or tap 'Share APK File' below to send the installer directly over WhatsApp, Drive, or Nearby Share.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            OutlinedTextField(
+                value = apkUrl,
+                onValueChange = { if (canEditAccessSettings) apkUrl = it },
+                readOnly = !canEditAccessSettings,
+                label = { Text("Direct HTTPS APK URL (No Play Store Required)") },
+                placeholder = { Text("https://downloads.yourschool.org/SafeTrack.apk") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
             OutlinedTextField(
                 value = primaryUrl,
                 onValueChange = { if (canEditAccessSettings) primaryUrl = it },
                 readOnly = !canEditAccessSettings,
-                label = { Text("Primary Download HTTPS URL") },
-                placeholder = { Text("https://play.google.com/store/apps/details?id=com.aistudio.safetrack.xkqvmz") },
+                label = { Text("Primary Web Portal / Firebase App Distribution URL") },
+                placeholder = { Text("https://appdistribution.firebase.google.com/pub/i/...") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().testTag("settings_primary_url_input")
             )
@@ -136,15 +167,7 @@ fun SettingsShareAppSection(
                 value = appStoreUrl,
                 onValueChange = { if (canEditAccessSettings) appStoreUrl = it },
                 readOnly = !canEditAccessSettings,
-                label = { Text("Apple App Store / Web Link (optional)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = apkUrl,
-                onValueChange = { if (canEditAccessSettings) apkUrl = it },
-                readOnly = !canEditAccessSettings,
-                label = { Text("Direct HTTPS APK Release URL (optional)") },
+                label = { Text("Apple App Store / Desktop Web Link (optional)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -163,16 +186,23 @@ fun SettingsShareAppSection(
             ) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = if (shareResult.isValid) "Active Verified Link (${shareResult.destinationType.label})" else "Invalid or Preview URL Rejected",
+                        text = if (shareResult.isValid) "Active Verified Link (${shareResult.destinationType.label})" else "Public Link Not Configured Yet",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (shareResult.isValid) SafeGreen700 else EmergencyRed700
                     )
                     Text(
-                        text = if (shareResult.isValid) shareResult.normalizedUrl else (shareResult.errorMessage ?: "Enter a valid https:// URL."),
+                        text = if (shareResult.isValid) shareResult.normalizedUrl else AppLinkValidator.installMethodHint(shareResult),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (shareResult.isValid) SafeGreen700 else EmergencyRed700
                     )
+                    if (shareResult.isValid) {
+                        Text(
+                            text = AppLinkValidator.installMethodHint(shareResult),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SafeGreen700
+                        )
+                    }
                 }
             }
 
@@ -230,6 +260,14 @@ fun SettingsShareAppSection(
                     Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(4.dp))
                     Text("Test URL")
+                }
+                OutlinedButton(
+                    onClick = { shareInstalledApkFile(context, schoolName) },
+                    modifier = Modifier.testTag("settings_share_apk_file_button")
+                ) {
+                    Icon(Icons.Filled.FilePresent, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.size(4.dp))
+                    Text("Share APK File")
                 }
             }
 

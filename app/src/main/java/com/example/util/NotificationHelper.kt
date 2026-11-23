@@ -38,7 +38,11 @@ object NotificationHelper {
     }
 
     fun showAlert(context: Context, title: String, body: String, notificationId: Int = (System.currentTimeMillis() % 100000).toInt()) {
-        if (!hasNotificationPermission(context)) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
         ensureChannel(context)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher_round)
@@ -48,8 +52,10 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
-        runCatching {
+        try {
             NotificationManagerCompat.from(context).notify(notificationId, notification)
+        } catch (_: SecurityException) {
+            // Permission revoked concurrently at runtime; ignore safely.
         }
     }
 }
