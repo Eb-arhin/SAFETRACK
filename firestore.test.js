@@ -855,14 +855,14 @@ test("App distribution & view access rules: Super Admin updates global, School A
   const parentDb = testEnv.authenticatedContext(PARENT_A).firestore();
   const ts = nowTs();
 
-  // Super Admin sets global public download URL & view access -> ALLOWED
+  // Super Admin sets global public & private access with direct HTTPS APK URL -> ALLOWED
   await assertSucceeds(
     superDb.collection("app_distribution").doc("global").set({
       configId: "global",
-      downloadUrl: "https://play.google.com/store/apps/details?id=com.aistudio.safetrack.xkqvmz",
-      viewAccessMode: "public_open",
+      downloadUrl: "https://downloads.cefelix.edu.gh/SafeTrack.apk",
+      viewAccessMode: "public_and_private",
       allowedDeviceTypes: ["phone", "tablet", "computer"],
-      releaseNotes: "Public release for Android phones, tablets, and desktop.",
+      releaseNotes: "Public APK release & private school workspaces for Android phones, tablets, and desktop.",
       updatedByUid: "super_uid",
       updatedAt: ts,
     })

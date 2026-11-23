@@ -1046,7 +1046,23 @@ class SafeTrackRepositoryRuleTest : FirestoreEmulatorTestBase() {
             adminRepo.createSchoolInvite(school, "", UserRole.PARENT, emptyList(), emptyList(), "Admin DIST").getOrThrow()
         }
 
-        val customUrl = "https://play.google.com/store/apps/details?id=com.aistudio.safetrack.xkqvmz&invite=$parentInvite"
+        val customUrl = "https://downloads.cefelix.edu.gh/SafeTrack.apk?invite=$parentInvite"
+        withTimeout(TIMEOUT_MS) {
+            adminRepo.saveAppDistributionConfig(
+                configId = schoolId,
+                downloadUrl = customUrl,
+                viewAccessMode = AppViewAccessMode.PUBLIC_AND_PRIVATE.key,
+                allowedDeviceTypes = listOf("phone", "tablet", "computer"),
+                releaseNotes = "Open on phone, tablet, or computer using invite $parentInvite"
+            ).getOrThrow()
+        }
+
+        val hybridConfig = withTimeout(FLOW_TIMEOUT_MS) {
+            adminRepo.observeAppDistributionConfig(schoolId).first { it.id == schoolId }
+        }
+        assertEquals(customUrl, hybridConfig.downloadUrl)
+        assertEquals(AppViewAccessMode.PUBLIC_AND_PRIVATE.key, hybridConfig.viewAccessMode)
+
         withTimeout(TIMEOUT_MS) {
             adminRepo.saveAppDistributionConfig(
                 configId = schoolId,
@@ -1058,7 +1074,9 @@ class SafeTrackRepositoryRuleTest : FirestoreEmulatorTestBase() {
         }
 
         val adminConfig = withTimeout(FLOW_TIMEOUT_MS) {
-            adminRepo.observeAppDistributionConfig(schoolId).first { it.id == schoolId }
+            adminRepo.observeAppDistributionConfig(schoolId).first {
+                it.id == schoolId && it.viewAccessMode == AppViewAccessMode.INVITE_ONLY.key
+            }
         }
         assertEquals(customUrl, adminConfig.downloadUrl)
         assertEquals(AppViewAccessMode.INVITE_ONLY.key, adminConfig.viewAccessMode)

@@ -441,7 +441,7 @@ service cloud.firestore {
              isOptionalValidHttpsUrl(data, 'playStoreUrl') &&
              isOptionalValidHttpsUrl(data, 'appStoreUrl') &&
              isOptionalValidHttpsUrl(data, 'apkDownloadUrl') &&
-             data.viewAccessMode in ['public_open', 'invite_only', 'staff_and_parents'] &&
+             data.viewAccessMode in ['public_and_private', 'public_open', 'invite_only', 'staff_and_parents'] &&
              isBoundedStringList(data.allowedDeviceTypes, 10) &&
              data.releaseNotes is string && data.releaseNotes.size() <= 300 &&
              isValidId(data.updatedByUid) &&

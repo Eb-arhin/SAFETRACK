@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.data.model.AppDistributionConfig
+import com.example.data.model.AppViewAccessMode
 import com.example.data.model.DeviceViewLayoutMode
 import com.example.data.model.InviteInspectionResult
 import com.example.data.model.InviteInspectionStatus
@@ -172,6 +173,30 @@ fun OnboardingScreen(
                 }
             }
 
+            val viewAccess = remember(appDistributionConfig.viewAccessMode) {
+                AppViewAccessMode.fromKey(appDistributionConfig.viewAccessMode)
+            }
+            val canRegisterPublicSchool = viewAccess.allowsPublicRegistrationAndDownload || isSuperAdmin
+
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = if (viewAccess.allowsPublicRegistrationAndDownload) SafeBlue100.copy(alpha = 0.55f) else DelayAmber100.copy(alpha = 0.6f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Workspace Access Policy: ${viewAccess.label}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (viewAccess.allowsPublicRegistrationAndDownload) SafeBlue700 else DelayAmber700
+                    )
+                    Text(
+                        text = viewAccess.description,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
             TabRow(selectedTabIndex = selectedTab) {
                 Tab(
                     selected = selectedTab == 0,
@@ -261,6 +286,23 @@ fun OnboardingScreen(
                                 .testTag("claim_invite_button")
                         ) {
                             Text("Join School")
+                        }
+                    }
+                }
+            } else if (!canRegisterPublicSchool) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Private Access Mode Active", style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            "App View Access is currently set to '${viewAccess.label}'. Public school registration is paused—enter a School Admin invite code on the 'Join via Invite' tab, or ask a Super Admin to switch view access to Public & Private Access.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Button(
+                            onClick = { selectedTab = 0 },
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                        ) {
+                            Text("Switch to Join via Invite")
                         }
                     }
                 }

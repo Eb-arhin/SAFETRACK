@@ -51,25 +51,45 @@ enum class AttendanceStatus(val key: String, val label: String) {
     }
 }
 
-enum class AppViewAccessMode(val key: String, val label: String, val description: String) {
+enum class AppViewAccessMode(
+    val key: String,
+    val label: String,
+    val description: String,
+    val allowsPublicRegistrationAndDownload: Boolean,
+    val restrictsSchoolRecordsToMembers: Boolean
+) {
+    PUBLIC_AND_PRIVATE(
+        key = "public_and_private",
+        label = "Public & Private Access",
+        description = "Allows both public and private use: public app download & school sign-up for anyone, while school, pupil, attendance, and report records stay private to verified members and invitees.",
+        allowsPublicRegistrationAndDownload = true,
+        restrictsSchoolRecordsToMembers = true
+    ),
     PUBLIC_OPEN(
         key = "public_open",
         label = "Public Open Access",
-        description = "Anyone with the app URL can download, register a school, or join with an invite code."
+        description = "Anyone with the app URL can download, register a school, or join with an invite code.",
+        allowsPublicRegistrationAndDownload = true,
+        restrictsSchoolRecordsToMembers = false
     ),
     INVITE_ONLY(
         key = "invite_only",
-        label = "Invite-Only Access",
-        description = "Only teachers and parents with an admin-issued invite code or URL can view school records."
+        label = "Private (Invite-Only)",
+        description = "Private school access: only teachers and parents with an admin-issued invite code or URL can join and view school records.",
+        allowsPublicRegistrationAndDownload = false,
+        restrictsSchoolRecordsToMembers = true
     ),
     STAFF_AND_PARENTS(
         key = "staff_and_parents",
-        label = "Verified Members Only",
-        description = "Restricted strictly to verified linked staff and guardians."
+        label = "Private (Verified Members Only)",
+        description = "Strictly private: restricted to verified linked staff and guardians.",
+        allowsPublicRegistrationAndDownload = false,
+        restrictsSchoolRecordsToMembers = true
     );
 
     companion object {
-        fun fromKey(key: String): AppViewAccessMode = entries.firstOrNull { it.key == key } ?: PUBLIC_OPEN
+        fun fromKey(key: String): AppViewAccessMode =
+            entries.firstOrNull { it.key == key } ?: PUBLIC_AND_PRIVATE
     }
 }
 
@@ -92,9 +112,9 @@ data class AppDistributionConfig(
     val playStoreUrl: String = "",
     val appStoreUrl: String = "",
     val apkDownloadUrl: String = "",
-    val viewAccessMode: String = AppViewAccessMode.PUBLIC_OPEN.key,
+    val viewAccessMode: String = AppViewAccessMode.PUBLIC_AND_PRIVATE.key,
     val allowedDeviceTypes: List<String> = listOf("phone", "tablet", "computer"),
-    val releaseNotes: String = "Configure a verified Google Play listing, Apple App Store page, Firebase App Distribution release, or hosted HTTPS download link for phones, tablets, and desktops.",
+    val releaseNotes: String = "Configure a verified Direct APK URL, Firebase App Distribution link, HTTPS download page, or store link for public & private use.",
     val updatedByUid: String = "",
     @ServerTimestamp val updatedAt: Timestamp? = null
 ) {

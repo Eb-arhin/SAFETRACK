@@ -24,15 +24,22 @@ class ExampleUnitTest {
         val cfg = AppDistributionConfig()
         assertEquals("", AppDistributionConfig.DEFAULT_PUBLIC_APP_URL)
         assertEquals("", cfg.downloadUrl)
-        assertEquals(AppViewAccessMode.PUBLIC_OPEN.key, cfg.viewAccessMode)
+        assertEquals(AppViewAccessMode.PUBLIC_AND_PRIVATE.key, cfg.viewAccessMode)
         assertEquals(listOf("phone", "tablet", "computer"), cfg.allowedDeviceTypes)
     }
 
     @Test
     fun appViewAccessAndDeviceLayout_fromKeyFallbackCorrectly() {
+        assertEquals(AppViewAccessMode.PUBLIC_AND_PRIVATE, AppViewAccessMode.fromKey("public_and_private"))
+        assertEquals(AppViewAccessMode.PUBLIC_OPEN, AppViewAccessMode.fromKey("public_open"))
         assertEquals(AppViewAccessMode.INVITE_ONLY, AppViewAccessMode.fromKey("invite_only"))
         assertEquals(AppViewAccessMode.STAFF_AND_PARENTS, AppViewAccessMode.fromKey("staff_and_parents"))
-        assertEquals(AppViewAccessMode.PUBLIC_OPEN, AppViewAccessMode.fromKey("unknown"))
+        assertEquals(AppViewAccessMode.PUBLIC_AND_PRIVATE, AppViewAccessMode.fromKey("unknown"))
+
+        assertTrue(AppViewAccessMode.PUBLIC_AND_PRIVATE.allowsPublicRegistrationAndDownload)
+        assertTrue(AppViewAccessMode.PUBLIC_AND_PRIVATE.restrictsSchoolRecordsToMembers)
+        assertFalse(AppViewAccessMode.INVITE_ONLY.allowsPublicRegistrationAndDownload)
+        assertTrue(AppViewAccessMode.INVITE_ONLY.restrictsSchoolRecordsToMembers)
 
         assertEquals(DeviceViewLayoutMode.PHONE, DeviceViewLayoutMode.fromKey("phone"))
         assertEquals(DeviceViewLayoutMode.TABLET, DeviceViewLayoutMode.fromKey("tablet"))

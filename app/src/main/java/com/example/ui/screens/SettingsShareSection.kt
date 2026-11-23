@@ -273,7 +273,12 @@ fun SettingsShareAppSection(
 
             HorizontalDivider()
 
-            Text("View Access Policy", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text("View Access Policy (Public & Private Controls)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Choose 'Public & Private Access' to allow both public app download/registration and private invite-protected school records, or restrict access strictly to private invites/verified members.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             AppViewAccessMode.entries.forEach { mode ->
                 val selected = accessMode == mode
                 Surface(

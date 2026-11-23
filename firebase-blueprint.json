@@ -386,7 +386,7 @@
         "playStoreUrl": { "type": "string" },
         "appStoreUrl": { "type": "string" },
         "apkDownloadUrl": { "type": "string" },
-        "viewAccessMode": { "type": "string", "enum": ["public_open", "invite_only", "staff_and_parents"] },
+        "viewAccessMode": { "type": "string", "enum": ["public_and_private", "public_open", "invite_only", "staff_and_parents"] },
         "allowedDeviceTypes": { "type": "array" },
         "releaseNotes": { "type": "string" },
         "updatedByUid": { "type": "string" },

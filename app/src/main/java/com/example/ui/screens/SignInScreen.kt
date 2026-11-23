@@ -264,6 +264,27 @@ fun SignInScreen(
                             Text("How SafeTrack Works (5-Slide Guide)")
                         }
 
+                        val accessMode = com.example.data.model.AppViewAccessMode.fromKey(appDistributionConfig.viewAccessMode)
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (accessMode.allowsPublicRegistrationAndDownload) SafeGreen100.copy(alpha = 0.55f) else SafeBlue100.copy(alpha = 0.55f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = "View Access: ${accessMode.label}",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (accessMode.allowsPublicRegistrationAndDownload) SafeGreen700 else SafeBlue900
+                                )
+                                Text(
+                                    text = accessMode.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
                         Text(
                             text = "Privacy Notice: SafeTrack isolates each school's pupil records. Children's locations are never placed in public pages or share links.",
                             style = MaterialTheme.typography.bodySmall,
